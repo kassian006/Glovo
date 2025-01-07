@@ -26,7 +26,6 @@ class Category(models.Model):
 class Store(models.Model):
     store_name = models.CharField(max_length=32)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='store_category')
-    store_images = models
     description = models.TextField()
     address = models.CharField(max_length=50)
     owner = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
@@ -76,29 +75,8 @@ class Product(models.Model):
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.PositiveSmallIntegerField(default=0)
-    store = models.ForeignKey(Store, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f'{self.product_name}, {self.store}'
-
-    def get_avg_rating(self):
-        ratings = self.store_review.all()
-        if ratings.exists():
-            return round(sum([i.rating for i in ratings]) / ratings.count(), 1)
-        return  0
-
-    def get_total_people(self):
-        people = self.store_review.all()
-        if people.exists():
-            if people.count() > 3:
-                return '+3'
-            return people.count()
-        return 0
-
-    def get_total_good(self):
-        total = self.store_review.count()
-        good = self.store_review.filter(rating__gt=3).count()
-        return f'{round((good * 100) / total)}%' if total > 0 else '0%'
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='products')
+    product = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='category_product', verbose_name='category')
 
 
 class ProductImage(models.Model):
@@ -116,25 +94,6 @@ class ComboProduct(models.Model):
     def __str__(self):
         return f'{self.combo_name}, {self.store}'
 
-    def get_avg_rating(self):
-        ratings = self.store_review.all()
-        if ratings.exists():
-            return round(sum([i.rating for i in ratings]) / ratings.count(), 1)
-        return  0
-
-    def get_total_people(self):
-        people = self.store_review.all()
-        if people.exists():
-            if people.count() > 3:
-                return '+3'
-            return people.count()
-        return 0
-
-    def get_total_good(self):
-        total = self.store_review.count()
-        good = self.store_review.filter(rating__gt=3).count()
-        return f'{round((good * 100) / total)}%' if total > 0 else '0%'
-
 
 class Cart(models.Model):
     user = models.OneToOneField(UserProfile, on_delete=models.CASCADE, related_name='cart')
@@ -146,7 +105,6 @@ class Cart(models.Model):
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='item')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveSmallIntegerField(default=0)
 
     def __str__(self):
